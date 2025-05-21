@@ -2,15 +2,48 @@ import os
 import numpy as np
 import tensorflow as tf
 
+# Force GPU usage
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # Use first GPU
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
+
 # GPU configuration
+print("TensorFlow version:", tf.__version__)
+print("Checking GPU availability...")
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     print(f"Found {len(physical_devices)} GPU(s)")
     for device in physical_devices:
+        # Enable memory growth to prevent TensorFlow from allocating all GPU memory at once
         tf.config.experimental.set_memory_growth(device, True)
         print(f"GPU name: {device.name}")
+        print(f"GPU device details: {tf.config.experimental.get_device_details(device)}")
 else:
     print("No GPU found. Running on CPU")
+    print("Available devices:", tf.config.list_physical_devices())
+
+def diagnose_gpu():
+    print("\n=== GPU Diagnostic Information ===")
+    print(f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')}")
+    
+    # Check if CUDA is available through TensorFlow
+    print(f"TensorFlow built with CUDA: {tf.test.is_built_with_cuda()}")
+    print(f"TensorFlow GPU available: {tf.test.is_gpu_available()}")
+    
+    # Try to execute a simple operation on GPU
+    try:
+        with tf.device('/GPU:0'):
+            a = tf.constant([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+            b = tf.constant([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+            c = tf.matmul(a, b)
+            print(f"Matrix multiplication result: {c}")
+            print("Successfully executed operation on GPU")
+    except Exception as e:
+        print(f"Error executing operation on GPU: {e}")
+    
+    print("=== End of Diagnostic Information ===\n")
+
+# Call the diagnostic function
+diagnose_gpu()
 
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
